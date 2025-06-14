@@ -1,0 +1,22 @@
+@import '~/node_modules/bulma/css/bulma.css';
+
+/* カスタムスタイル */
+.venue-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.venue-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.event-item {
+  border-left: 3px solid #3273dc;
+  padding-left: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.loading-spinner {
+  margin: 2rem auto;
+  text-align: center;
+}
