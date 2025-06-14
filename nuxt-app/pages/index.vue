@@ -97,8 +97,12 @@
           </div>
           
           <!-- Error State -->
-          <div v-else-if="error" class="notification is-danger">
-            <strong>エラーが発生しました:</strong> {{ error.message }}
+          <div v-else-if="error || initError" class="notification is-danger">
+            <strong>エラーが発生しました:</strong> 
+            <p>{{ error?.message || initError?.message || 'Unknown error' }}</p>
+            <p v-if="initError" class="mt-2">
+              <small>環境変数が正しく設定されているか確認してください。</small>
+            </p>
           </div>
           
           <!-- Empty State -->
@@ -183,7 +187,16 @@
 </template>
 
 <script setup>
-const supabase = useSupabase()
+// Supabaseクライアントの初期化（エラーハンドリング付き）
+let supabase = null
+let initError = null
+
+try {
+  supabase = useSupabase()
+} catch (error) {
+  initError = error
+  console.error('Failed to initialize Supabase:', error)
+}
 
 // State
 const selectedArea = ref('')
@@ -192,31 +205,42 @@ const selectedCapacity = ref('')
 
 // Fetch venues with events
 const { data: venues, pending, error, refresh } = await useAsyncData('venues-with-events', async () => {
-  const today = new Date().toISOString().split('T')[0]
+  // Supabaseが初期化されていない場合は空配列を返す
+  if (!supabase || initError) {
+    console.error('Supabase not initialized:', initError)
+    return []
+  }
   
-  const { data, error } = await supabase
-    .from('venues')
-    .select(`
-      *,
-      events(
-        id,
-        title,
-        date,
-        start_time,
-        artists
-      )
-    `)
-    .order('name')
+  try {
+    const today = new Date().toISOString().split('T')[0]
     
-  if (error) throw error
-  
-  // Filter events on the client side
-  return data?.map(venue => ({
-    ...venue,
-    events: venue.events?.filter(event => 
-      event.date >= today && event.status === 'active'
-    ) || []
-  })) || []
+    const { data, error } = await supabase
+      .from('venues')
+      .select(`
+        *,
+        events(
+          id,
+          title,
+          date,
+          start_time,
+          artists
+        )
+      `)
+      .order('name')
+      
+    if (error) throw error
+    
+    // Filter events on the client side
+    return data?.map(venue => ({
+      ...venue,
+      events: venue.events?.filter(event => 
+        event.date >= today && event.status === 'active'
+      ) || []
+    })) || []
+  } catch (err) {
+    console.error('Error fetching venues:', err)
+    return []
+  }
 })
 
 // Computed properties
