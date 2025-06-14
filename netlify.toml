@@ -1,8 +1,9 @@
 [build]
   # ビルドコマンドと公開ディレクトリ
   base = "nuxt-app/"
-  command = "npm run build"
+  command = "npm install && npm run build"
   publish = ".output/public"
+  functions = ".output/server"
 
 [build.environment]
   # Node.jsバージョン指定
@@ -12,10 +13,16 @@
 [context.production.environment]
   NITRO_PRESET = "netlify"
 
-# SPAフォールバック設定
+# API routes
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/server"
+  status = 200
+
+# Dynamic routes
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.netlify/functions/server"
   status = 200
 
 # ヘッダー設定
