@@ -29,8 +29,8 @@ netlify deploy --prod
 以下の設定が自動的に適用されます（netlify.tomlから）：
 
 - **Base directory**: `nuxt-app/`
-- **Build command**: `npm run build`
-- **Publish directory**: `nuxt-app/.output/public`
+- **Build command**: `npm run generate`
+- **Publish directory**: `nuxt-app/dist`
 - **Node version**: 18
 
 ## 3. 環境変数の設定

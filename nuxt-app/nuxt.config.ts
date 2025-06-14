@@ -4,14 +4,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   
   nitro: {
-    preset: 'netlify',
-    output: {
-      dir: '.output',
-      publicDir: '.output/public'
+    prerender: {
+      routes: ['/']
     }
   },
   
-  ssr: true,
+  ssr: false,
   
   modules: [
     '@nuxt/image',
