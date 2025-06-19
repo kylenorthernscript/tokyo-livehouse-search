@@ -49,6 +49,29 @@
             
             <div class="column">
               <div class="field">
+                <label class="label">ジャンル</label>
+                <div class="control has-icons-left">
+                  <div class="select is-fullwidth">
+                    <select v-model="selectedGenre">
+                      <option value="">すべてのジャンル</option>
+                      <option value="jazz">Jazz & Blues</option>
+                      <option value="electronic">Electronic & Techno</option>
+                      <option value="rock">J-Rock & Visual Kei</option>
+                      <option value="pop">J-Pop & Idol</option>
+                      <option value="classical">Classical & Traditional</option>
+                      <option value="hiphop">Hip-Hop & Underground</option>
+                      <option value="world">World & Experimental</option>
+                    </select>
+                  </div>
+                  <span class="icon is-small is-left">
+                    <i class="fas fa-music"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="column">
+              <div class="field">
                 <label class="label">日付</label>
                 <div class="control has-icons-left">
                   <input class="input" type="date" v-model="selectedDate">
@@ -118,8 +141,8 @@
           
           <!-- Venues Grid -->
           <div v-else class="columns is-multiline">
-            <div v-for="venue in filteredVenues" :key="venue.id" class="column is-6-tablet is-4-desktop">
-              <div class="card venue-card">
+            <div v-for="venue in filteredVenues" :key="venue.id" class="column is-12-mobile is-6-tablet is-4-desktop is-3-widescreen">
+              <div class="card venue-card" @click="navigateToVenue(venue.id)">
                 <div class="card-content">
                   <div class="media">
                     <div class="media-left">
@@ -167,16 +190,24 @@
                   </div>
                 </div>
                 
-                <footer class="card-footer" v-if="venue.official_url">
-                  <a :href="venue.official_url" 
+                <div class="venue-card-actions">
+                  <button class="button is-primary is-light is-fullwidth mb-2" @click.stop="navigateToVenue(venue.id)">
+                    <span class="icon is-small">
+                      <i class="fas fa-calendar-alt"></i>
+                    </span>
+                    <span class="button-text">スケジュール</span>
+                  </button>
+                  <a v-if="venue.official_url" 
+                     :href="venue.official_url" 
                      target="_blank" 
-                     class="card-footer-item has-text-primary">
+                     class="button is-link is-light is-fullwidth"
+                     @click.stop>
                     <span class="icon is-small">
                       <i class="fas fa-external-link-alt"></i>
                     </span>
-                    <span>公式サイト</span>
+                    <span class="button-text">公式サイト</span>
                   </a>
-                </footer>
+                </div>
               </div>
             </div>
           </div>
@@ -202,6 +233,7 @@ try {
 const selectedArea = ref('')
 const selectedDate = ref('')
 const selectedCapacity = ref('')
+const selectedGenre = ref('')
 
 // Fetch venues with events
 const { data: venues, pending, error, refresh } = await useAsyncData('venues-with-events', async () => {
@@ -223,7 +255,8 @@ const { data: venues, pending, error, refresh } = await useAsyncData('venues-wit
           title,
           date,
           start_time,
-          artists
+          artists,
+          status
         )
       `)
       .order('name')
@@ -252,9 +285,33 @@ const areas = computed(() => {
 const filteredVenues = computed(() => {
   if (!venues.value) return []
   
-  return venues.value.filter(venue => {
+  return venues.value.map(venue => {
+    // First, filter events based on selected date
+    let filteredEvents = venue.events || []
+    
+    if (selectedDate.value) {
+      filteredEvents = filteredEvents.filter(event => event.date === selectedDate.value)
+    }
+    
+    // Create venue with filtered events
+    const venueWithFilteredEvents = {
+      ...venue,
+      events: filteredEvents
+    }
+    
+    return venueWithFilteredEvents
+  }).filter(venue => {
     // Area filter
     if (selectedArea.value && venue.area !== selectedArea.value) return false
+    
+    // Genre filter
+    if (selectedGenre.value) {
+      const venueGenres = venue.metadata?.genre || []
+      const hasMatchingGenre = venueGenres.some(genre => 
+        genre.includes(selectedGenre.value) || selectedGenre.value.includes(genre)
+      )
+      if (!hasMatchingGenre) return false
+    }
     
     // Capacity filter
     if (selectedCapacity.value) {
@@ -263,20 +320,19 @@ const filteredVenues = computed(() => {
       if (selectedCapacity.value === 'large' && venue.capacity <= 1000) return false
     }
     
-    // Date filter - only filter if there's a selected date and the venue has events
+    // If date is selected, only show venues that have events on that date
     if (selectedDate.value) {
-      if (venue.events && venue.events.length > 0) {
-        const hasEventOnDate = venue.events.some(event => event.date === selectedDate.value)
-        if (!hasEventOnDate) return false
-      } else {
-        // If no events and date is selected, don't show this venue
-        return false
-      }
+      return venue.events && venue.events.length > 0
     }
     
     return true
   })
 })
+
+// Navigation
+const navigateToVenue = (venueId) => {
+  navigateTo(`/venues/${venueId}`)
+}
 
 // Utilities
 const formatDate = (dateString) => {
@@ -288,3 +344,109 @@ const formatDate = (dateString) => {
   }).format(date)
 }
 </script>
+
+<style scoped>
+.venue-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 100%;
+}
+
+.venue-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.venue-card .card-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-item {
+  padding: 0.5rem 0;
+  border-left: 3px solid #3273dc;
+  padding-left: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.event-item:last-child {
+  margin-bottom: 0;
+}
+
+.loading-spinner {
+  padding: 3rem 0;
+}
+
+/* 会場カードアクション */
+.venue-card-actions {
+  padding: 1rem;
+  margin-top: auto;
+}
+
+.venue-card-actions .button {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.25rem;
+}
+
+.venue-card-actions .button-text {
+  display: inline;
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 1216px) and (min-width: 1024px) {
+  /* デスクトップサイズでのボタン調整 */
+  .venue-card-actions .button {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    min-height: 2rem;
+  }
+  
+  .venue-card-actions .button .icon {
+    margin-right: 0.25rem !important;
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 769px) {
+  /* タブレットサイズでの調整 */
+  .venue-card-actions .button {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.5rem;
+    min-height: 1.875rem;
+  }
+  
+  .venue-card-actions .button .icon {
+    margin-right: 0.25rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* モバイルサイズ */
+  .venue-card-actions {
+    padding: 0.75rem;
+  }
+  
+  .venue-card-actions .button {
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 小画面での更なる調整 */
+  .venue-card-actions .button {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .venue-card-actions .button-text {
+    display: none;
+  }
+  
+  .venue-card-actions .button .icon {
+    margin-right: 0 !important;
+  }
+}
+</style>

@@ -1,0 +1,31 @@
+{
+  "venues": {
+    "下北沢SHELTER": {
+      "name": "下北沢SHELTER",
+      "schedule_url": "https://www.loft-prj.co.jp/schedule/shelter/schedule",
+      "official_url": "https://www.loft-prj.co.jp/SHELTER/",
+      "last_updated": "2025-06-18T14:50:00.000Z",
+      "notes": "ロフト系列のライブハウス"
+    },
+    "Crawfish": {
+      "name": "Crawfish",
+      "schedule_url": "https://crawfish.jp",
+      "official_url": "https://crawfish.jp",
+      "last_updated": "2025-06-18T14:50:00.000Z",
+      "notes": "赤坂のジャズライブハウス"
+    },
+    "Zepp DiverCity (TOKYO)": {
+      "name": "Zepp DiverCity (TOKYO)",
+      "schedule_url": "https://www.zepp.co.jp/hall/divercity/",
+      "official_url": "https://www.zepp.co.jp/hall/divercity/",
+      "last_updated": "2025-06-18T14:50:00.000Z",
+      "notes": "大型ライブハウスチェーンZeppの東京拠点"
+    }
+  },
+  "metadata": {
+    "created_at": "2025-06-18T14:50:00.000Z",
+    "updated_at": "2025-06-18T14:50:00.000Z",
+    "version": "1.0.0",
+    "description": "ライブハウスのスケジュール確認URL管理ファイル"
+  }
+}
